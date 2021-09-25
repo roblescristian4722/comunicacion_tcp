@@ -12,10 +12,12 @@ type Proc struct {
 }
 
 func Proceso(id uint64, i uint64, kill chan uint64, ret chan uint64) {
+    fmt.Println("Nuevo proceso: ", id, i)
 	for {
         select {
             case res := <-kill:
                 if res == id {
+                    fmt.Println("KILL: ", res)
                     ret <- i
                     return
                 } else { kill <- res }

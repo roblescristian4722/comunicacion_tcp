@@ -5,11 +5,13 @@ import (
     "encoding/gob"
     "os"
     "os/signal"
+    "strings"
+    "strconv"
     "./proceso"
 )
 
 func cliente() {
-    res := proceso.Proc{ 0, 0, false }
+    msg := "0|0|0"
     c, err := net.Dial("tcp", ":9999")
     if err != nil {
         fmt.Println(err)
@@ -21,21 +23,30 @@ func cliente() {
     retC := make(chan uint64)
     signal.Notify(sig, os.Interrupt)
 
-    gob.NewEncoder(c).Encode(res)
-    gob.NewDecoder(c).Decode(&res)
+    enc := gob.NewEncoder(c)
+    dec := gob.NewDecoder(c)
 
-    go proceso.Proceso(res.Id, res.Data, killC, retC)
+    enc.Encode(msg)
+    dec.Decode(&msg)
+    c.Close()
+    fmt.Println(msg)
+
+    res := strings.Split(msg, "|")
+    id, _ := strconv.ParseUint(res[0], 10, 64)
+    data, _ := strconv.ParseUint(res[1], 10, 64)
+
+    go proceso.Proceso(id, data, killC, retC)
+
+    // Bloque que se ejecutará cuando el usuario presione Ctrl + C
+    <-sig
+    killC <- id
+    data, _ = <-retC
 
     c, err = net.Dial("tcp", ":9999")
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-
-    <-sig
-    killC <- res.Id
-    res.Data, _ = <-retC
-    gob.NewEncoder(c).Encode(res)
+    msg2 := strconv.FormatUint(id, 10) + "|" + strconv.FormatUint(data, 10) + "|" + "1"
+    fmt.Println("msg: ", msg2)
+    gob.NewEncoder(c).Encode(msg2)
+    fmt.Println("Cerrando")
     c.Close()
     os.Exit(1)
 }
