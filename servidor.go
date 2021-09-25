@@ -23,7 +23,7 @@ func servidor() {
         fmt.Println(err)
         return
     }
-    
+
     // Inicializa goroutines
     for i, _ := range p { go proceso.Proceso(uint64(i), 0, killC, retC) }
     // Escucha peticiones de clientes
@@ -34,7 +34,6 @@ func servidor() {
             continue
         }
         gob.NewDecoder(c).Decode(&msg)
-        fmt.Println(msg)
         res := strings.Split(msg, "|")
         if res[2] == "0" {
             go startClient(c, p, retC, killC)
@@ -53,7 +52,6 @@ func endClient(c net.Conn, p []ProcStruct, retC chan uint64, killC chan uint64, 
 func startClient(c net.Conn, p []ProcStruct, retC chan uint64, killC chan uint64) {
     for i := 0; i < len(p); i++ {
         if p[i][1] == 0 {
-            fmt.Println("i: ", i)
             killC <- uint64(i)
             data := <-retC
             p[i][1] = 1

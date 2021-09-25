@@ -29,7 +29,6 @@ func cliente() {
     enc.Encode(msg)
     dec.Decode(&msg)
     c.Close()
-    fmt.Println(msg)
 
     res := strings.Split(msg, "|")
     id, _ := strconv.ParseUint(res[0], 10, 64)
@@ -44,9 +43,7 @@ func cliente() {
 
     c, err = net.Dial("tcp", ":9999")
     msg2 := strconv.FormatUint(id, 10) + "|" + strconv.FormatUint(data, 10) + "|" + "1"
-    fmt.Println("msg: ", msg2)
     gob.NewEncoder(c).Encode(msg2)
-    fmt.Println("Cerrando")
     c.Close()
     os.Exit(1)
 }

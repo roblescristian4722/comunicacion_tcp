@@ -5,26 +5,24 @@ import (
     "time"
 )
 
-type Proc struct {
-    Id uint64
-    Data uint64
-    Active bool
-}
+var endl int = 0
+var max int = 0
 
 func Proceso(id uint64, i uint64, kill chan uint64, ret chan uint64) {
-    fmt.Println("Nuevo proceso: ", id, i)
+    max ++
 	for {
         select {
             case res := <-kill:
                 if res == id {
-                    fmt.Println("KILL: ", res)
                     ret <- i
+                    max--
                     return
                 } else { kill <- res }
-            default:
+            case <-time.After(time.Millisecond * 500):
                 fmt.Printf("\nid %d: %d", id, i)
+                endl = ( endl + 1 ) % max
+                if endl == 0 && max > 1 { fmt.Print("\n----------") }
                 i = i + 1
-                time.Sleep(time.Millisecond * 500)
         }
     }
 }
