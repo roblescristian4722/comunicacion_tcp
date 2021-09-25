@@ -27,7 +27,7 @@ func servidor() {
     // Escucha peticiones de clientes
     for {
         c, err := s.Accept()
-        gob.NewDecoder(c).Decode(res)
+        gob.NewDecoder(c).Decode(&res)
 
         if err != nil {
             fmt.Println(err)
@@ -35,15 +35,13 @@ func servidor() {
         }
         if res.Active == true {
             go endClient(c, p, retC, killC, res)
-        } else {
-            fmt.Println("res: ", res)
-            go startClient(c, p, retC, killC)
-        }
+        } else { go startClient(c, p, retC, killC) }
     }
 }
 
 func endClient(c net.Conn, p []ProcStruct, retC chan uint64, killC chan uint64, res proceso.Proc) {
-    
+    p[res.Id] = [2]uint64{ 0, 0 }
+    go proceso.Proceso(res.Id, res.Data, retC, killC)
 }
 
 func startClient(c net.Conn, p []ProcStruct, retC chan uint64, killC chan uint64) {
@@ -52,11 +50,10 @@ func startClient(c net.Conn, p []ProcStruct, retC chan uint64, killC chan uint64
             killC <- uint64(i)
             data := <-retC
             p[i][1] = 1
-            fmt.Println([3]uint64{uint64(i), data, 1})
-            gob.NewEncoder(c).Encode(proceso.Proc{ 
+            gob.NewEncoder(c).Encode(proceso.Proc{
                                                 Id: uint64(i),
                                                 Data: data,
-                                                Active: true })
+                                                Active: true})
             break
         }
     }
